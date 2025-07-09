@@ -23,7 +23,7 @@ jobs:
       TEST_PATH: ./tests/EventsManager.Application.Tests/EventsManager.Application.Tests.csproj
       APP_BASE_ARCHIVE_NAME: EventsManagerApplication
 
-      TEMPLATE_PATH_FILE: ./../serverless.template
+      TEMPLATE_PATH_FILE: ./serverless.template
 
     permissions:
       id-token: write
@@ -38,8 +38,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 📦 Restore Dependencies
-        run: dotnet restore
+      # - name: 📦 Restore Dependencies
+      #   run: dotnet restore
 
       # - name: 🏗️ Build Project
       #   run: dotnet build --configuration Release --no-restore
@@ -47,26 +47,31 @@ jobs:
       # - name: ✅ Run Tests
       #   run: dotnet test --configuration Release  --no-restore --verbosity minimal
 
-      - name: 📦 Publish Project
-        run: |
-          dotnet publish -c Release -o ./publish
+      # - name: 📦 Publish Project
+      #   run: |
+      #     dotnet publish -c Release -o ./publish
         
-      - name: Set environment variables
+      # - name: Set environment variables
+      #   run: |
+      #         DATETIME=$(date +"%Y%m%d_%H%M%S")
+      #         ZIP_FILE_NAME="${{ env.APP_BASE_ARCHIVE_NAME }}_${DATETIME}"
+      #         echo "Final name: $ZIP_FILE_NAME"
+      #         echo "ZIP_FILE_NAME=${ZIP_FILE_NAME}.zip" >> $GITHUB_ENV
+      
+      - name: Set to existing ZIP_FILE_NAME
         run: |
-              DATETIME=$(date +"%Y%m%d_%H%M%S")
-              ZIP_FILE_NAME="${{ env.APP_BASE_ARCHIVE_NAME }}_${DATETIME}"
-              echo "Final name: $ZIP_FILE_NAME"
-              echo "ZIP_FILE_NAME=${ZIP_FILE_NAME}.zip" >> $GITHUB_ENV
+             ZIP_FILE_NAME="EventsManagerApplication_20250709_022831.zip"
+             echo "ZIP_FILE_NAME=${ZIP_FILE_NAME}" >> $GITHUB_ENV
       
       - name: Print to ensure zip file name is set
         run: |
               echo "Final name: $ZIP_FILE_NAME"
 
-      - name: Zip published output
-        run: |
-          cd publish
-          zip -r ../$ZIP_FILE_NAME .
-          cd .. 
+      # - name: Zip published output
+      #   run: |
+      #     cd publish
+      #     zip -r ../$ZIP_FILE_NAME .
+      #     cd .. 
 
       - name: Print current working directory
         run: pwd
@@ -77,8 +82,8 @@ jobs:
             role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_TO_ASSUME }}
             aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Upload zip to S3
-        run: aws s3 cp $ZIP_FILE_NAME s3://${{ vars.S3_BUCKET }}/$ZIP_FILE_NAME
+      # - name: Upload zip to S3
+      #   run: aws s3 cp $ZIP_FILE_NAME s3://${{ vars.S3_BUCKET }}/$ZIP_FILE_NAME
             
       - name: Deploy CloudFormation stack
         run: |
