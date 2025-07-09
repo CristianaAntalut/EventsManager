@@ -2,7 +2,9 @@
 
 on:
   push:
-    branches: [ "master" ]
+    branches: 
+     - master
+     - 'feature/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -21,7 +23,7 @@ jobs:
       TEST_PATH: ./tests/EventsManager.Application.Tests/EventsManager.Application.Tests.csproj
       APP_BASE_ARCHIVE_NAME: EventsManagerApplication
 
-      TEMPLATE_PATH_FILE: serverless.template
+      TEMPLATE_PATH_FILE: ./serverless.template
 
     permissions:
       id-token: write
@@ -67,6 +69,8 @@ jobs:
           zip -r ../$ZIP_FILE_NAME .
           cd .. 
 
+      - name: Print current working directory
+        run: pwd
 
       - name: 🛞 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -83,7 +87,9 @@ jobs:
             --template-file ${{ env.TEMPLATE_PATH_FILE }} \
             --stack-name ${{ vars.STACK_NAME }} \
             --region ${{ vars.AWS_REGION }} \
-            --capabilities CAPABILITY_NAMED_IAM \
+            --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM  \
             --no-fail-on-empty-changeset
-            --parameter-overrides CognitoUserPoolArn=${{ secrets.COGNITO_USERPOOL_ARN }}  DeploymentS3BucketParam=${{ vars.S3_BUCKET }}  DeploymentS3KeyParam=$ZIP_FILE_NAME
-       
+            --parameter-overrides CognitoUserPoolArn=${{ secrets.COGNITO_USERPOOL_ARN }} DeploymentS3BucketParam=${{ vars.S3_BUCKET }} DeploymentS3KeyParam=$ZIP_FILE_NAME
+    
+            
+
