@@ -23,7 +23,7 @@ jobs:
       TEST_PATH: ./tests/EventsManager.Application.Tests/EventsManager.Application.Tests.csproj
       APP_BASE_ARCHIVE_NAME: EventsManagerApplication
 
-      TEMPLATE_PATH_FILE: ./serverless.template
+      TEMPLATE_PATH_FILE: ./../serverless.template
 
     permissions:
       id-token: write
@@ -58,10 +58,9 @@ jobs:
               echo "Final name: $ZIP_FILE_NAME"
               echo "ZIP_FILE_NAME=${ZIP_FILE_NAME}.zip" >> $GITHUB_ENV
       
-      - name: Print to ensure
+      - name: Print to ensure zip file name is set
         run: |
               echo "Final name: $ZIP_FILE_NAME"
-
 
       - name: Zip published output
         run: |
