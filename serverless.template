@@ -1,0 +1,178 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Description": "",
+  "Parameters": {
+    "CognitoUserPoolArn": {
+      "Type": "String",
+      "Description": "The ARN of the Cognito User Pool"
+    },
+    "DeploymentS3BucketParam": {
+      "Type": "String",
+      "Description": "The name of the existing Amazon S3 bucket for the deployment artifacts",
+    },
+    "DeploymentS3KeyParam": {
+      "Type": "String",
+      "Description": "The name of the existing Amazon S3 key for the current deployment artifacts",
+    }
+  },
+
+  "Resources": {
+    
+    "EventsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {
+          "Fn::Sub": "events-bucket-${AWS::Region}"
+        }
+      }
+    },
+
+
+    "EventAttendeesDynamoTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": {
+          "Fn::Sub": "EventAttendees-${AWS::Region}"
+        },
+        "AttributeDefinitions": [
+          { "AttributeName": "EventId", "AttributeType": "S" },
+          { "AttributeName": "UserId", "AttributeType": "S" }
+        ],
+        "KeySchema": [
+          { "AttributeName": "EventId", "KeyType": "HASH" },
+          { "AttributeName": "UserId", "KeyType": "RANGE" }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "UserId-EventId-index",
+            "KeySchema": [
+              { "AttributeName": "UserId", "KeyType": "HASH" },
+              { "AttributeName": "EventId", "KeyType": "RANGE" }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+
+    "EventsManagerApiGateway": {
+      "Type": "AWS::Serverless::Api",
+      "Properties": {
+        "Name": "EventsManager AWS Api Gateway",
+        "StageName": "Prod"
+      },
+      "Auth": {
+        "DefaultAuthorizer":{
+            "Ref": "CognitoAuthorizer"
+          },
+        "Authorizers": {
+          "CognitoAuthorizer": {
+            "UserPoolArn": {
+              "Ref": "CognitoUserPoolArn"
+            }
+          }
+        }
+      }
+    },
+
+    "CognitoAuthorizer": {
+        "Type": "AWS::ApiGateway::Authorizer",
+        "Properties": {
+          "Name": "CognitoAuthorizer",
+          "Type": "COGNITO_USER_POOLS",
+          "IdentitySource": "method.request.header.Authorization",
+          "ProviderARNs": [
+            {
+              "Ref": "CognitoUserPoolArn"
+            }
+          ],
+          "RestApiId": {
+            "Ref": "EventsManagerApiGateway"
+          }
+        }
+    },
+   "CustomLambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+         {
+            "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/Custom_AllowSecretsManagerReadOnly"
+         }
+        ]
+      }
+    },
+    "EventsManagerFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "EventsManager.Application::EventsManager.Application.LambdaEntryPoint::FunctionHandlerAsync",
+        "Runtime": "dotnet8",
+        "CodeUri": {
+          "Bucket": {
+            "Ref": "DeploymentS3BucketParam"
+          },
+          "Key": {
+            "Ref": "DeploymentS3KeyParam"
+          }
+        },
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Role": {
+            "Fn::GetAtt": [
+                "CustomLambdaExecutionRole",
+                "Arn"
+              ]
+        },
+        "Policies": [
+          "AWSLambda_FullAccess",
+          "CloudWatchLogsFullAccess"
+        ],
+        "Events": {
+          "RootResource": {
+            "Type": "Api",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "EventsManagerApiGateway"
+              },
+              "Path": "/",
+              "Method": "ANY"
+            }
+          },
+          "EventsManagerApi": {
+            "Type": "Api",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "EventsManagerApiGateway"
+              },
+              "Path": "/{proxy+}",
+              "Method": "ANY"
+            }
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "EventsManagerApiGateway": {
+      "Description": "API Gateway endpoint URL for function",
+      "Value": {
+        "Fn::Sub": "https://${EventsManagerApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      }
+    }
+  }
+}
