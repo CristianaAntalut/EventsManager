@@ -1,4 +1,4 @@
-﻿name: Build & Deploy
+﻿name: FEAT Build & Deploy
 
 on:
   push:
