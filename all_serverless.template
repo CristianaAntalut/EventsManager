@@ -130,7 +130,7 @@
     "EventsManagerFunction": {
       "Type": "AWS::Serverless::Function",
       "Properties": {
-        "Handler": "LES.Application::LES.Application.LambdaEntryPoint::FunctionHandlerAsync",
+        "Handler": "EventsManager.Application::EventsManager.Application.LambdaEntryPoint::FunctionHandlerAsync",
         "Runtime": "dotnet8",
         "CodeUri": {
           "Bucket": {
