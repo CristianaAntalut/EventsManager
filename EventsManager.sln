@@ -11,12 +11,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventsManager.Application",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{74C43E86-5C18-4A26-B80B-DB709026BB64}"
 	ProjectSection(SolutionItems) = preProject
-		serverless.template = serverless.template
+		all_serverless.template = all_serverless.template
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{50E61AC8-BCE2-4C26-9E41-9A93E7352A0A}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\build-and-deploy.yml = .github\workflows\build-and-deploy.yml
+		.github\workflows\feat-build-and-deploy.yml = .github\workflows\feat-build-and-deploy.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{5ABCDEF4-CCC0-47DE-901B-341C414E1FB8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "publish-and-date-zip", "publish-and-date-zip", "{F7E1D3D3-2B53-437D-8AC8-E1022E94FA9B}"
+	ProjectSection(SolutionItems) = preProject
+		.github\actions\publish-and-date-zip\action.yml = .github\actions\publish-and-date-zip\action.yml
 	EndProjectSection
 EndProject
 Global
@@ -36,6 +43,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{C5644091-4D08-0091-4E66-2534F9FF3BBC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{50E61AC8-BCE2-4C26-9E41-9A93E7352A0A} = {74C43E86-5C18-4A26-B80B-DB709026BB64}
+		{5ABCDEF4-CCC0-47DE-901B-341C414E1FB8} = {74C43E86-5C18-4A26-B80B-DB709026BB64}
+		{F7E1D3D3-2B53-437D-8AC8-E1022E94FA9B} = {5ABCDEF4-CCC0-47DE-901B-341C414E1FB8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {41152E86-0477-4B84-8928-409A94A8C188}

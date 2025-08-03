@@ -1,4 +1,5 @@
 using EventsManager.Application.ExtensionManager;
+using Serilog;
 
 namespace EventsManager.Application;
 
@@ -8,14 +9,26 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
     {
         var region = Environment.GetEnvironmentVariable("AWS_REGION");
         builder
-            .ConfigureAppConfiguration(((_, configurationBuilder) =>
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddSerilog();
+            })
+            .ConfigureAppConfiguration((_, configurationBuilder) =>
             {
                 configurationBuilder.AddAmazonSecretsManager(region, "test/MyApiCredentials");
-            }))
+            })
             .UseStartup<Startup>();
     }
 
     protected override void Init(IHostBuilder builder)
     {
+        builder
+            .UseSerilog((context, services, configuration) =>
+            {
+                configuration
+                            .Enrich.FromLogContext()
+                            .WriteTo.Console();
+            });
     }
 }

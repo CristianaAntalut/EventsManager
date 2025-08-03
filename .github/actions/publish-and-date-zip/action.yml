@@ -1,0 +1,41 @@
+name: 'Publish and Zip .NET Project'
+description: 'Publishes a .NET project and zips the output'
+inputs:
+  project_path:
+    description: 'Path to .csproj'
+    required: true
+  output_directory:
+    description: 'Output directory'
+    required: true
+
+outputs: 
+  zip_name:
+    description: 'Name to the resulting zip file'
+    value: ${{ steps.publish_zip_step.outputs.zip_name }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set environment variables
+      shell: bash 
+      run: |
+            DATETIME=$(date +"%Y%m%d_%H%M%S")
+            ZIP_FILE_NAME="$(basename ${{ inputs.project_path }} .csproj)_${DATETIME}"
+            echo "ZIP_FILE_NAME=${ZIP_FILE_NAME}.zip" >> $GITHUB_ENV
+
+    - name: Print to ensure zip file name is set
+      shell: bash
+      id: publish_zip_step
+      run: |
+            echo "Final name: $ZIP_FILE_NAME"    
+            echo "zip_name=$ZIP_FILE_NAME" >> $GITHUB_OUTPUT
+
+    - name: Set output directory content
+      run: |
+        dotnet publish ${{ inputs.project_path }} -c Release -o ${{ inputs.output_directory }}
+        cd ${{ inputs.output_directory }}
+        zip -r ../$ZIP_FILE_NAME .
+        cd ../..
+        rm -rf ${{ inputs.output_directory }}
+      shell: bash
+           

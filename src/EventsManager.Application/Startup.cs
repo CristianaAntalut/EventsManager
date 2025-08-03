@@ -70,31 +70,6 @@ public partial class Startup
         services.AddSingleton(awsOptions);
         
         services.AddAWSService<IAmazonCloudWatchLogs>(awsOptions);
-        services.AddSingleton(sp =>
-        {
-            return new CloudWatchSinkOptions
-            {
-                LogGroupName = "/aws/lambda/EventsManager.Application",
-                CreateLogGroup = true,
-                MinimumLogEventLevel = Serilog.Events.LogEventLevel.Information,
-                TextFormatter = new Serilog.Formatting.Json.JsonFormatter()
-            };
-        });
-        services.AddLogging(loggingBuilder =>
-        {
-            var options = services.BuildServiceProvider().GetRequiredService<CloudWatchSinkOptions>();
-            var client = services.BuildServiceProvider().GetRequiredService<IAmazonCloudWatchLogs>();
-
-            var logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(Configuration)
-                .WriteTo.Console()
-                .WriteTo.Debug()
-                .WriteTo.AmazonCloudWatch(options, client)
-                .CreateLogger();
-
-            loggingBuilder.AddSerilog(logger, dispose: true);
-        });
-
         services.AddAWSService<IAmazonS3>(awsOptions);
         services.AddAWSService<IAmazonCognitoIdentityProvider>(awsOptions);
 

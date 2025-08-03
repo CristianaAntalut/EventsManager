@@ -23,7 +23,9 @@ public class UsersController : ControllerBase
         _userPoolConfig = userPoolConfig;
     }
 
-    // GET: api/users
+    /// <summary>
+    /// GET: api/users: Lists all users in the user pool.
+    /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> ListUsers(int limit = 10, string paginationToken = null)
@@ -43,7 +45,9 @@ public class UsersController : ControllerBase
         });
     }
 
-    // GET: api/users/{username}
+    /// <summary>
+    ///  GET: api/users/{username}: Retrieves a specific user by username.
+    /// </summary>
     [Authorize]
     [HttpGet("{username}")]
     public async Task<IActionResult> GetUser(string username)
@@ -70,7 +74,9 @@ public class UsersController : ControllerBase
         }
     }
 
-    // GET: api/users/{userId}/events
+    /// <summary>
+    /// GET: api/users/{userId}/events: Retrieves events that a specific user attends to.
+    /// </summary>
     [Authorize]
     [HttpGet("{username}/events")]
     public async Task<IActionResult> GetEventsUserAttendsTo(string username)

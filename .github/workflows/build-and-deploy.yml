@@ -92,7 +92,7 @@ jobs:
             --stack-name ${{ vars.STACK_NAME }} \
             --region ${{ vars.AWS_REGION }} \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM  \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset \
             --parameter-overrides CognitoUserPoolArn=${{ secrets.COGNITO_USERPOOL_ARN }} DeploymentS3BucketParam=${{ vars.S3_BUCKET }} DeploymentS3KeyParam=$ZIP_FILE_NAME
     
             

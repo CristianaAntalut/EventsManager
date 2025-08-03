@@ -1,0 +1,78 @@
+﻿name: Build & Deploy
+
+on:
+  push:
+    branches: [ master, feature/test-deplyment-workflow ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (test/prod)'
+        required: true
+        default: 'test'
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    environment: test
+    env:
+      DOTNET_VERSION: '8.0.x'
+      PROJECT_PATH: ./src/EventsManager.Application/EventsManager.Application.csproj
+      # TEST_PATH: ./tests/EventsManager.Application.Tests/EventsManager.Application.Tests.csproj
+     
+      TEMPLATE_PATH_FILE: ./all_serverless.template
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: 🛠️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 📦 Restore Dependencies
+        run: dotnet restore
+
+      - name: 🏗️ Build Project
+        run: dotnet build --configuration Release --no-restore
+
+      # - name: ✅ Run Tests
+      #   run: dotnet test --configuration Release  --no-restore --verbosity minimal
+
+      - name:  📢 Publish and Zip using Action
+        id: publish_zip
+        uses: ./.github/actions/publish-and-date-zip
+        with:
+          project_path:  ${{ env.PROJECT_PATH }}
+          output_directory: ./publish_output
+
+
+      - name: 🛞 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+            role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_TO_ASSUME }}
+            aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Upload zip to S3
+        run: aws s3 cp ${{ steps.publish_zip.outputs.zip_name }} s3://${{ vars.S3_BUCKET }}/${{ steps.publish_zip.outputs.zip_name }}
+
+      - name: Deploy CloudFormation stack
+        run: |
+          aws cloudformation deploy \
+            --template-file ${{ env.TEMPLATE_PATH_FILE }} \
+            --stack-name ${{ vars.STACK_NAME }} \
+            --region ${{ vars.AWS_REGION }} \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+             Environment=test \
+             CognitoUserPoolArn=${{ secrets.COGNITO_USERPOOL_ARN }} \
+             DeploymentS3BucketParam=${{ vars.S3_BUCKET }} \
+             DeploymentS3KeyParam=${{ steps.publish_zip.outputs.zip_name }}
+
+
+      

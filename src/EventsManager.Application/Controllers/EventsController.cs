@@ -20,7 +20,7 @@ public class EventsController : ControllerBase
     private readonly BucketConfig _bucketConfig;
     private readonly ILogger<EventsController> _logger;
 
-    public EventsController(IAmazonS3 s3Client, IEventAttendeeRepository repository, BucketConfig  bucketConfig, ILogger<EventsController> logger)
+    public EventsController(IAmazonS3 s3Client, IEventAttendeeRepository repository, BucketConfig bucketConfig, ILogger<EventsController> logger)
     {
         _s3Client = s3Client;
         _repository = repository;
@@ -28,7 +28,10 @@ public class EventsController : ControllerBase
         _logger = logger;
     }
 
-    // GET /api/events
+
+    /// <summary>
+    /// GET /api/events: Lists all events stored in the S3 bucket with the specified prefix.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> ListEvents()
     {
@@ -48,7 +51,9 @@ public class EventsController : ControllerBase
         return Ok(eventIds);
     }
 
-    // GET /api/events/{id}
+    /// <summary>
+    ///  GET /api/events/{id}: Retrieves a specific event by its ID.
+    /// </summary>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetEvent(string id)
     {
@@ -66,7 +71,9 @@ public class EventsController : ControllerBase
         }
     }
 
-    // GET /api/events/eventId/attendees
+    /// <summary>
+    ///  GET /api/events/eventId/attendees: Retrieves a list of attendees for a specific event by its ID.
+    /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpGet("{eventId}/attendees")]
     public async Task<IActionResult> GetAttendeesToEvent(string eventId)
@@ -84,7 +91,9 @@ public class EventsController : ControllerBase
         }
     }
 
-    // POST /api/events/{eventId}/attendees
+    /// <summary>
+    ///  POST /api/events/{eventId}/attendees: Adds an attendee to a specific event by IDs.
+    /// </summary>
     [Authorize]
     [HttpPost("{eventId}/attendees")]
     public async Task<IActionResult> CreateAttendeeToEvent(string eventId, string userId)
@@ -104,7 +113,9 @@ public class EventsController : ControllerBase
         return Accepted();
     }
 
-    // DELETE /api/events/{eventId}/attendees
+    /// <summary>
+    ///  DELETE /api/events/{eventId}/attendees: Removes all attendees from a specific event by its ID.
+    /// </summary>
     [Authorize("Admin")]
     [HttpDelete("{eventId}/attendees")]
     public async Task<IActionResult> RemoveAttendeesFromEvent(string eventId)
@@ -119,6 +130,9 @@ public class EventsController : ControllerBase
         return Accepted();
     }
 
+    /// <summary>
+    /// DELETE /api/events/{eventId}/attendees/{userId}: Removes a specific attendee from an event by event ID and user ID.
+    /// </summary>
     [Authorize]
     [HttpDelete("{eventId}/attendees/{userId}")]
     public async Task<IActionResult> RemoveAttendeeFromEvent(string eventId, string userId)
@@ -132,7 +146,9 @@ public class EventsController : ControllerBase
         return Accepted();
     }
 
-    // POST /api/events
+    /// <summary>
+    /// POST /api/events: Creates a new event with a unique ID and stores it in the S3 bucket.
+    /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateEvent([FromBody] Event eventData)
@@ -152,7 +168,9 @@ public class EventsController : ControllerBase
         return CreatedAtAction(nameof(GetEvent), new { id = eventId }, new { id = eventId });
     }
 
-    // PUT /api/events/{id}
+    /// <summary>
+    /// PUT /api/events/{id}: Updates an existing event by its ID.
+    /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent(string id, [FromBody] Event eventData)
@@ -170,7 +188,8 @@ public class EventsController : ControllerBase
         return Ok();
     }
 
-    // DELETE /api/events/{id}
+    /// <summary>
+    /// DELETE /api/events/{id}: Deletes an event by its ID and removes all associated attendees.
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEvent(string id)
